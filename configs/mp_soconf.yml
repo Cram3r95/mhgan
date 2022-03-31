@@ -20,7 +20,7 @@ optim_parameters:
     d_learning_rate: 1.0e-3
     d_weight_decay: 0
 hyperparameters:
-    train_gan: False
+    train_gan: True
     loss_type_g: "mse_w+nll"
     lr_schduler: True # ExponentialLR
     output_single_agent: True 
@@ -30,11 +30,11 @@ hyperparameters:
     d_steps: 2
     g_steps: 1
     print_every: 10
-    checkpoint_every: 20000
-    output_dir: "save/argoverse/mm_k_6_class_balance_0_3" #"save/argoverse/test" #
+    checkpoint_every: 15000
+    output_dir: "save/argoverse/lstm_mm_k6_pre_gan" #"save/argoverse/test" #
     exp_description: "single agent, social with confidences"
     checkpoint_name: "0"
-    checkpoint_start_from: 
+    checkpoint_start_from: "save/argoverse/lstm_mm_k6_exp1/argoverse_motion_forecasting_dataset_0_with_model.pt"
     restore_from_checkpoint: 
     clipping_threshold_d: 0
     clipping_threshold_g: 1.1
@@ -58,6 +58,7 @@ hyperparameters:
 sophie:
     generator: 
         hdim: 32
+        n_samples: 6
     discriminator:
         # Encoder
         encoder:
