@@ -19,9 +19,9 @@ BASE_DIR = "/home/robesafe/libraries/SoPhie"
 sys.path.append(BASE_DIR)
 
 from sophie.utils.utils import relative_to_abs_sgan
-# from sophie.models.mp_so_goals_decoder import TrajectoryGenerator
+from sophie.models.mp_so_goals_decoder import TrajectoryGenerator
 # from sophie.models.mp_soconf import TrajectoryGenerator
-from sophie.models.mp_so import TrajectoryGenerator
+# from sophie.models.mp_so import TrajectoryGenerator
 from sophie.data_loader.argoverse.dataset_sgan_version_test_map import ArgoverseMotionForecastingDataset, \
                                                                        seq_collate, load_list_from_folder, \
                                                                        read_file
@@ -70,7 +70,7 @@ num_agents_per_obs = config.hyperparameters.num_agents_per_obs
 config.sophie.generator.social_attention.linear_decoder.out_features = past_observations * num_agents_per_obs
 
 config.dataset.split = "val"
-config.dataset.split_percentage = 0.005 #0.025 # To generate the final results, must be 1 (whole split test) 0.0001
+config.dataset.split_percentage = 1.0 #0.025 # To generate the final results, must be 1 (whole split test) 0.0001
 config.dataset.start_from_percentage = 0.0
 config.dataset.batch_size = 1 # Better to build the h5 results file
 config.dataset.num_workers = 0
@@ -151,13 +151,13 @@ else:
                         num_workers=config.dataset.num_workers,
                         collate_fn=seq_collate)
 
-    exp_name = "exp9" # "mm_k_6_class_balance_0_3"
+    exp_name = "test_goal_decoder" # "mm_k_6_class_balance_0_3"
     model_path = BASE_DIR + "/save/argoverse/" + exp_name + "/argoverse_motion_forecasting_dataset_0_with_model.pt"
     checkpoint = torch.load(model_path)
     generator = TrajectoryGenerator(config.sophie.generator)
 
     print("Loading model ...")
-    generator.load_state_dict(checkpoint.config_cp['g_best_state'])
+    generator.load_state_dict(checkpoint.config_cp['g_best_state'], strict=False)
     generator.cuda() # Use GPU
     generator.eval()
 
@@ -262,7 +262,8 @@ else:
                 # Get predictions
                 # pred_traj_fake_rel = generator(obs_traj, obs_traj_rel, frames, agent_idx) # seq_start_end)
                 t0 = time.time()
-                pred_traj_fake_rel = generator(obs_traj, obs_traj_rel, seq_start_end, agent_idx)
+                # pred_traj_fake_rel = generator(obs_traj, obs_traj_rel, seq_start_end, agent_idx)
+                pred_traj_fake_rel = generator(obs_traj, obs_traj_rel, frames, seq_start_end, agent_idx)
                 # print("time ", time.time() -t0)
 
                 # Get predictions in absolute coordinates

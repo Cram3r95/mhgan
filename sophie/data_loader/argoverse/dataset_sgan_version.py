@@ -454,7 +454,7 @@ class ArgoverseMotionForecastingDataset(Dataset):
         self.ego_vehicle_origin = []
         self.cont_seqs = 0
         
-        GENERATE_NPY = False
+        GENERATE_NPY = True
 
         if GENERATE_NPY:
 

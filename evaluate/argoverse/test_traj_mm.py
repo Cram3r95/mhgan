@@ -155,7 +155,7 @@ except:
     data_images_folder = config.dataset.path + config.dataset.split + "/data_images"
 
     MAP_GENERATION = False
-    PLOT_QUALITATIVE_RESULTS = True
+    PLOT_QUALITATIVE_RESULTS = False
 
     dist_around = 40
     dist_rasterized_map = [-dist_around, dist_around, -dist_around, dist_around]
@@ -224,7 +224,7 @@ except:
                             num_workers=config.dataset.num_workers,
                             collate_fn=seq_collate)
 
-        exp_name = "settrans/exp1" #"gen_exp/exp7"
+        exp_name = "mm_k_6_class_balance_0_3" #"gen_exp/exp7"
         model_path = BASE_DIR + "/save/argoverse/" + exp_name + "/argoverse_motion_forecasting_dataset_0_with_model.pt"
         checkpoint = torch.load(model_path)
         generator = TrajectoryGenerator()

@@ -26,7 +26,7 @@ def get_noise(shape):
 class TrajectoryGenerator(nn.Module):
     def __init__(
         self, obs_len=20, pred_len=30, mlp_dim=64, h_dim=32, embedding_dim=16, bottleneck_dim=32,
-        noise_dim=8, n_agents=10, img_feature_size=(512,6,6), dropout=0.3, decoder_type=1
+        noise_dim=8, n_agents=10, img_feature_size=(512,6,6), dropout=0.3, decoder_type=0
     ):
         super(TrajectoryGenerator, self).__init__()
 

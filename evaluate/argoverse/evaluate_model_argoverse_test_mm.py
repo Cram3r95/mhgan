@@ -29,7 +29,7 @@ from sophie.data_loader.argoverse.dataset_sgan_version import ArgoverseMotionFor
 # from sophie.models.sophie_adaptation import TrajectoryGenerator
 from sophie.models.mp_soconf import TrajectoryGenerator
 from sophie.modules.evaluation_metrics import displacement_error, final_displacement_error
-from sophie.utils.utils import relative_to_abs, relative_to_abs_sgan
+from sophie.utils.utils import relative_to_abs, relative_to_abs_sgan, relative_to_abs_sgan_multimodal
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--model_path', type=str)
@@ -64,19 +64,21 @@ def evaluate(loader, generator, num_samples, pred_len, split, results_path):
 
             predicted_traj = [] # Store k trajectories per sequence for the agent
             agent_idx = torch.where(object_cls==1)[0].cpu().numpy()
-            for _ in range(num_samples):
-                # Get predictions
-                pred_traj_fake_rel = generator(obs_traj, obs_traj_rel, seq_start_end, agent_idx) # seq_start_end)
+            # for _ in range(num_samples):
+            # Get predictions
+            pred_traj_fake_rel, conf = generator(obs_traj, obs_traj_rel, seq_start_end, agent_idx) # seq_start_end)
 
-                # Get predictions in absolute coordinates
-                pred_traj_fake = relative_to_abs_sgan(pred_traj_fake_rel, obs_traj[-1,agent_idx, :]) + ego_origin.permute(1,0,2)# 30,1,2
-                predicted_traj.append(pred_traj_fake)
+            # # Get predictions in absolute coordinates
+            pred_traj_fake = relative_to_abs_sgan_multimodal(pred_traj_fake_rel, obs_traj[-1, agent_idx,:]) + ego_origin.permute(1,0,2).unsqueeze(0)# 30,1,2
+            print("pred_traj_fake ", pred_traj_fake.shape)
 
-            predicted_traj = torch.stack(predicted_traj, axis=0).view(num_samples,-1,2) # Num_samples x pred_len x 2 (x,y)
+            # predicted_traj = torch.stack(predicted_traj, axis=0).view(num_samples,-1,2) # Num_samples x pred_len x 2 (x,y)
+            b, m, t, xy = pred_traj_fake.shape
+            pred_traj_fake = pred_traj_fake.view(-1, t, xy)
 
             key = num_seq_list[0].cpu().item()
 
-            output_all[key] = predicted_traj.cpu().numpy()
+            output_all[key] = pred_traj_fake.cpu().numpy()
             file_list.remove(key)
 
         # add sequences not loaded in dataset
@@ -90,7 +92,6 @@ def evaluate(loader, generator, num_samples, pred_len, split, results_path):
             output_all[key] = np.zeros((num_samples, 30, 2))
 
         # Generate H5 file for Argoverse Motion-Forecasting competition
-        pdb.set_trace()
         generate_forecasting_h5(output_all, results_path)
 
     return output_all
@@ -125,7 +126,7 @@ def main(args):
     config_file.sophie.generator.social_attention.linear_decoder.out_features = past_observations * num_agents_per_obs
 
     config_file.dataset.split = "test"
-    config_file.dataset.split_percentage = 0.001 # To generate the final results, must be 1 (whole split test)
+    config_file.dataset.split_percentage = 1 # To generate the final results, must be 1 (whole split test)
     config_file.dataset.batch_size = 1 # Better to build the h5 results file
     config_file.dataset.num_workers = 0
     config_file.dataset.class_balance = -1.0 # Do not consider class balance in the split test
