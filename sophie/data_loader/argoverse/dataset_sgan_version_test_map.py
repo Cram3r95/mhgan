@@ -41,7 +41,7 @@ from sophie.utils.utils import relative_to_abs
 
 data_imgs_folder = None
 visual_data = False
-goal_points = True
+goal_points = False
 
 # Data augmentation variables
 
@@ -545,8 +545,8 @@ class ArgoverseMotionForecastingDataset(Dataset):
         global visual_data
         visual_data = v_data
 
-        GENERATE_SEQUENCES = True
-        SAVE_NPY = False
+        GENERATE_SEQUENCES = False
+        SAVE_NPY = True
 
         if GENERATE_SEQUENCES:
             folder = root_folder + split + "/data/"
@@ -803,7 +803,7 @@ class ArgoverseMotionForecastingDataset(Dataset):
                 self.cont_curved_traj = []
 
             if self.cont_seqs % self.batch_size == (self.batch_size-1):
-                assert len(self.cont_straight_traj) < self.class_balance*self.batch_size
+                assert len(self.cont_straight_traj) <= self.class_balance*self.batch_size
 
             trajectory_index = self.num_seq_list[index]
             straight_traj = True

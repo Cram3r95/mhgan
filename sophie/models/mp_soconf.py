@@ -9,7 +9,7 @@ from sophie.modules.backbones import VisualExtractor
 from sophie.modules.attention import MultiHeadAttention
 from sophie.modules.encoders import EncoderLSTM as Encoder
 from sophie.modules.decoders import DecoderLSTM as Decoder
-from sophie.modules.decoders import MMDecoderLSTM
+from sophie.modules.decoders import MMDecoderLSTM, CGH_MMDecoderLSTM
 
 MAX_PEDS = 32
 
@@ -48,12 +48,15 @@ class TrajectoryGenerator(nn.Module):
             num_hiddens=self.h_dim, num_heads=4, dropout=dropout
         )
 
-        self.decoder = MMDecoderLSTM(h_dim=self.h_dim, n_samples=n_samples)
+        self.decoder = MMDecoderLSTM(h_dim=self.h_dim, n_samples=n_samples) # ADE=1.55 / FDE=3.24
+        # self.decoder = CGH_MMDecoderLSTM(h_dim=self.h_dim, n_samples=n_samples)
 
         mlp_context_input = self.h_dim*2 # concat of social context and trajectories embedding
         self.lnc = nn.LayerNorm(mlp_context_input)
         mlp_decoder_context_dims = [mlp_context_input, self.mlp_dim, self.h_dim - self.noise_dim]
         self.mlp_decoder_context = make_mlp(mlp_decoder_context_dims)
+
+        self.linear_noise = nn.Linear(self.h_dim - self.noise_dim, self.h_dim)
 
     def add_noise(self, _input):
         npeds = _input.size(0)
@@ -105,7 +108,8 @@ class TrajectoryGenerator(nn.Module):
 
         ## add noise to decoder input
         noise_input = self.mlp_decoder_context(self.lnc(mlp_decoder_context_input)) # 80x24
-        decoder_h = self.add_noise(noise_input) # 80x32
+        # decoder_h = self.add_noise(noise_input) # 80x32
+        decoder_h = self.linear_noise(noise_input) # 80 x 32 # TODO: Is this correct?
         decoder_h = torch.unsqueeze(decoder_h, 0) # 1x80x32
 
         decoder_c = torch.zeros(tuple(decoder_h.shape)).cuda() # 1x80x32

@@ -15,7 +15,7 @@ from skimage.measure import LineModelND, ransac
 import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader
 
-BASE_DIR = "/home/robesafe/tesis/SoPhie"
+BASE_DIR = "/home/robesafe/libraries/SoPhie"
 sys.path.append(BASE_DIR)
 
 from sophie.modules.evaluation_metrics import displacement_error, final_displacement_error
@@ -46,9 +46,12 @@ def cal_ade(pred_traj_gt, pred_traj_fake, linear_obj, non_linear_obj, consider_p
     for i in range(b):
         _ade = []
         for j in range(m):
+            print("curr: ", pred_traj_fake[i,j,:,:].unsqueeze(0).permute(1,0,2))
+            print("gt: ", pred_traj_gt[:,i,:].unsqueeze(1))
             __ade = displacement_error(
                 pred_traj_fake[i,j,:,:].unsqueeze(0).permute(1,0,2), pred_traj_gt[:,i,:].unsqueeze(1), consider_ped
             )
+            pdb.set_trace()
             _ade.append(__ade.item())
         ade.append(_ade)
     ade = np.array(ade)
@@ -143,7 +146,7 @@ except:
     config.sophie.generator.social_attention.linear_decoder.out_features = past_observations * num_agents_per_obs
 
     config.dataset.split = "val"
-    config.dataset.split_percentage = 0.025 # To generate the final results, must be 1 (whole split test) 0.0001
+    config.dataset.split_percentage = 0.001 # To generate the final results, must be 1 (whole split test) 0.0001
     config.dataset.start_from_percentage = 0.0
     config.dataset.batch_size = 1 # Better to build the h5 results file
     config.dataset.num_workers = 0
@@ -224,11 +227,7 @@ except:
                             num_workers=config.dataset.num_workers,
                             collate_fn=seq_collate)
 
-<<<<<<< HEAD
         exp_name = "mm_k_6_class_balance_0_3" #"gen_exp/exp7"
-=======
-        exp_name = "mm_k_6" #"gen_exp/exp7"
->>>>>>> feature/trainer
         model_path = BASE_DIR + "/save/argoverse/" + exp_name + "/argoverse_motion_forecasting_dataset_0_with_model.pt"
         checkpoint = torch.load(model_path)
         generator = TrajectoryGenerator(n_samples=6)

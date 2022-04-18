@@ -14,10 +14,8 @@ from torch.utils.data import DataLoader
 import torch.optim.lr_scheduler as lrs
 from torch.cuda.amp import GradScaler, autocast 
 
-# from sophie.data_loader.argoverse.dataset_sgan_version import ArgoverseMotionForecastingDataset, seq_collate
 from sophie.data_loader.argoverse.dataset_sgan_version_test_map import ArgoverseMotionForecastingDataset, seq_collate
-
-from sophie.models.mp_soconf import TrajectoryGenerator, TrajectoryDiscriminator
+from sophie.models.mp_soconf_goals_cgh import TrajectoryGenerator, TrajectoryDiscriminator
 from sophie.modules.losses import pytorch_neg_multi_log_likelihood_batch, mse_custom, l2_loss, l2_loss_multimodal
 from sophie.modules.evaluation_metrics import displacement_error, final_displacement_error
 from sophie.utils.checkpoint_data import Checkpoint, get_total_norm
@@ -34,7 +32,9 @@ def get_lr(optimizer):
 
 def init_weights(m):
     classname = m.__class__.__name__
+    #print("class name: ", classname)
     if classname.find('Linear') != -1:
+        #print("m: ", m.weight)
         nn.init.kaiming_normal_(m.weight)
 
 def get_dtypes(use_gpu):
@@ -162,7 +162,7 @@ def model_trainer(config, logger):
     optimizer_g = optim.Adam(generator.parameters(), lr=optim_parameters.g_learning_rate, weight_decay=optim_parameters.g_weight_decay)
     if hyperparameters.lr_schduler:
         scheduler_g = lrs.ReduceLROnPlateau(
-            optimizer_g, "min", min_lr=1e-5, verbose=True, factor=0.5, patience=2000,
+            optimizer_g, "min", min_lr=5e-5, verbose=True, factor=0.5, patience=2000,
         )
     
     if hyperparameters.train_gan:
@@ -171,7 +171,7 @@ def model_trainer(config, logger):
         )
         if hyperparameters.lr_schduler:
             scheduler_d = lrs.ReduceLROnPlateau(
-                optimizer_d, "min", min_lr=5e-5, verbose=True, factor=0.5, patience=15000,
+                optimizer_d, "min", min_lr=5e-5, verbose=True, factor=0.5, patience=20000,
             )
 
 
@@ -341,7 +341,6 @@ def model_trainer(config, logger):
                 scheduler_g.step(losses_g["G_total_loss"])
                 g_lr = get_lr(optimizer_g)
                 writer.add_scalar("G_lr", g_lr, epoch+1)
-                # scheduler_d.step(losses_d["D_total_loss"])
     ###
     logger.info("Training finished")
 
@@ -409,7 +408,7 @@ def discriminator_step(
     # forward
     optimizer_d.zero_grad()
     generator_out, conf = generator(
-        obs_traj, obs_traj_rel, seq_start_end, agent_idx
+        obs_traj, obs_traj_rel, frames, seq_start_end, agent_idx
     )
 
     pred_traj_fake_rel = generator_out
@@ -483,7 +482,7 @@ def generator_step(
     # forward
     optimizer_g.zero_grad()
     generator_out, conf = generator(
-        obs_traj, obs_traj_rel, seq_start_end, agent_idx
+        obs_traj, obs_traj_rel, frames, seq_start_end, agent_idx
     )
 
     pred_traj_fake_rel = generator_out
@@ -589,7 +588,7 @@ def check_accuracy(
 
             ## forward
             pred_traj_fake_rel, conf = generator(
-                obs_traj, obs_traj_rel, seq_start_end, agent_idx
+                obs_traj, obs_traj_rel, frames, seq_start_end, agent_idx
             )
             # rel to abs
             if hyperparameters.output_single_agent:

@@ -68,7 +68,7 @@ def renderize_image(fig_plot, new_shape=(600,600),normalize=True):
 
 # _ZORDER = {"AGENT": 15, "AV": 10, "OTHER": 5}
 _ZORDER = {"AGENT": 3, "AV": 3, "OTHER": 3}
-COLORS = "orange"
+COLORS = "darkviolet"
 COLORS_MM = ["orange", "chartreuse", "khaki"]
 
 def interpolate_polyline(polyline: np.ndarray, num_points: int) -> np.ndarray:
@@ -395,7 +395,7 @@ def plot_trajectories(filename,obs_seq,first_obs,origin_pos, object_class_id_lis
 
     return norm_resized_full_img_cv
 
-def change_bg_color_2(img):
+def change_bg_color(img):
     img[np.all(img == (0, 0, 0), axis=-1)] = (255,255,255)
 
     return img
@@ -419,7 +419,7 @@ def generate_img(img_map, img_lanes, qualitative_results_folder, seq_id, t_img):
 
     ## Merge
     full_img_cv = cv2.add(img1_bg,img2_fg)
-    f_img = change_bg_color_2(full_img_cv)
+    f_img = change_bg_color(full_img_cv)
 
     if t_img == 0: # Original image
         filename = qualitative_results_folder + "/" + seq_id + ".png"
@@ -451,9 +451,9 @@ def plot_qualitative_results(filename, pred_traj_fake_list, agent_pred_traj_gt, 
     plot_object_trajectories = True
     plot_object_heads = True
 
-    color_dict = {"AGENT": (0.0,0.0,1.0,1.0), # BGR
-                  "AV": (1.0,0.0,0.0,1.0), 
-                  "OTHER": (0.0,1.0,0.0,1.0)} 
+    color_dict = {"AGENT": (1.0,0.0,0.0,1.0), 
+                  "AV": (0.0,0.0,1.0,1.0), 
+                  "OTHER": (0.0,0.5,0.0,1.0)} 
     object_type_tracker: Dict[int, int] = defaultdict(int)
 
     xcenter, ycenter = origin_pos[0][0][0].cpu().item(), origin_pos[0][0][1].cpu().item()
@@ -470,15 +470,15 @@ def plot_qualitative_results(filename, pred_traj_fake_list, agent_pred_traj_gt, 
 
     agent_obs_seq_global = obs_traj[:, agent_idx, :].view(-1,2).numpy() + origin_pos[0][0].cpu().numpy() # Global (HDmap)
     goal_points = dataset_utils.get_goal_points(filename, torch.tensor(agent_obs_seq_global), 
-                                                torch.tensor(ori_pos), dist_around,NUM_GOAL_POINTS=6)
+                                                torch.tensor(ori_pos), dist_around,NUM_GOAL_POINTS=32)
 
     ## radius of action
     vel = dataset_utils.get_agent_velocity(torch.transpose(obs_traj[:, agent_idx, :].view(-1,2),0,1))
     r = 3*vel
     if t_img > 0:
-        circ_car = plt.Circle((xcenter, ycenter), r, color="purple", fill=False, linewidth=3)
-        ax.add_patch(circ_car)
-        ax.scatter(goal_points[:,0], goal_points[:,1], marker="x", color='purple', s=8)
+        # circ_car = plt.Circle((xcenter, ycenter), r, color="brown", fill=False, linewidth=3)
+        # ax.add_patch(circ_car)
+        ax.scatter(goal_points[:,0], goal_points[:,1], marker="x", color='brown', s=8)
 
     ## abs gt
     agent_pred_traj_gt = agent_pred_traj_gt.view(-1,2).numpy() + origin_pos[0][0].cpu().numpy()
@@ -499,24 +499,22 @@ def plot_qualitative_results(filename, pred_traj_fake_list, agent_pred_traj_gt, 
         seq_rel = seq_id[0]
 
         object_type = translate_object_type(object_type)
+        c = color_dict[object_type] 
 
         if object_type == "AGENT":
             marker_type = "*"
             marker_size = 14 #15
             linewidth = 4
-            c = "b" # blue in rgb (final image)
             c_m = c
         elif object_type == "OTHER":
             marker_type = "s"
             marker_size = 10 #10
             linewidth = 4
-            c = "g"
             c_m = c
         elif object_type == "AV":
             marker_type = "o"
             marker_size = 10 # 10
             linewidth = 4
-            c = "r" # blue in rgb (final image)
             c_m = c
 
         cor_x = seq_rel[:,0] + xcenter #+ width/2
@@ -552,8 +550,7 @@ def plot_qualitative_results(filename, pred_traj_fake_list, agent_pred_traj_gt, 
                             agent_pred_traj_gt[:, 0],
                             agent_pred_traj_gt[:, 1],
                             "*",
-                            # color=color_dict[object_type],
-                            color="aqua",
+                            color="orange",
                             label=object_type if not object_type_tracker[object_type] else "",
                             alpha=1,
                             linewidth=0.5,
@@ -568,7 +565,6 @@ def plot_qualitative_results(filename, pred_traj_fake_list, agent_pred_traj_gt, 
                                 pred[:, 0],
                                 pred[:, 1],
                                 "*",
-                                # color=color_dict[object_type],
                                 color=c,
                                 label=object_type if not object_type_tracker[object_type] else "",
                                 alpha=1,
@@ -604,7 +600,7 @@ def plot_qualitative_results(filename, pred_traj_fake_list, agent_pred_traj_gt, 
 
     # Merge information
     split_folder = '/'.join(filename.split('/')[:-2])
-    qualitative_results_folder = split_folder + "/qualitative_results_six_goals"
+    qualitative_results_folder = split_folder + "/qualitative_results_no_circle"
     if not os.path.exists(qualitative_results_folder):
         print("Create qualitative results folder: ", qualitative_results_folder)
         os.makedirs(qualitative_results_folder) # makedirs creates intermediate folders

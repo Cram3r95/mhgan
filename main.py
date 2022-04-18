@@ -11,7 +11,8 @@ from prodict import Prodict
 from pathlib import Path
 
 TRAINER_LIST = ["so", "so2", "sovi", "trans_so", "trans_sovi", "soconf", "settrans",
-                "settransgoal", "so_goals", "so_data_augs", "so_goals_gan", "soconf_goals"]
+                "settransgoal", "so_goals", "so_data_augs", "so_goals_gan", 
+                "soconf_goals", "soconf_goals_cgh"]
 
 def create_logger(file_path):
     FORMAT = '[%(levelname)s: %(lineno)4d]: %(message)s'
@@ -72,6 +73,9 @@ if __name__ == "__main__":
     elif args.trainer == "soconf_goals":
         from sophie.trainers.trainer_gen_soconf_goals import model_trainer
         config_path = "./configs/mp_soconf_goals.yml"
+    elif args.trainer == "soconf_goals_cgh":
+        from sophie.trainers.trainer_gen_soconf_goals_cgh import model_trainer
+        config_path = "./configs/mp_soconf_goals_cgh.yml"
     else:
         assert 1==0, "Error"
 

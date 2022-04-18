@@ -15,7 +15,7 @@ from skimage.measure import LineModelND, ransac
 import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader
 
-BASE_DIR = "/home/robesafe/tesis/SoPhie"
+BASE_DIR = "/home/robesafe/libraries/SoPhie"
 sys.path.append(BASE_DIR)
 
 from sophie.utils.utils import relative_to_abs_sgan
@@ -58,7 +58,7 @@ def get_origin_and_city(seq,obs_window):
 
 # Load config
 
-with open(r'./configs/sophie_argoverse.yml') as config:
+with open(r'./configs/mp_so_goals.yml') as config:
         config = yaml.safe_load(config)
         config = Prodict.from_dict(config)
         config.base_dir = BASE_DIR
@@ -67,10 +67,10 @@ with open(r'./configs/sophie_argoverse.yml') as config:
 
 past_observations = config.hyperparameters.obs_len
 num_agents_per_obs = config.hyperparameters.num_agents_per_obs
-config.sophie.generator.social_attention.linear_decoder.out_features = past_observations * num_agents_per_obs
+#config.sophie.generator.social_attention.linear_decoder.out_features = past_observations * num_agents_per_obs
 
 config.dataset.split = "val"
-config.dataset.split_percentage = 1.0 #0.025 # To generate the final results, must be 1 (whole split test) 0.0001
+config.dataset.split_percentage = 0.05 #0.025 # To generate the final results, must be 1 (whole split test) 0.0001
 config.dataset.start_from_percentage = 0.0
 config.dataset.batch_size = 1 # Better to build the h5 results file
 config.dataset.num_workers = 0
@@ -140,25 +140,24 @@ else:
                                                 num_agents_per_obs=config.hyperparameters.num_agents_per_obs,
                                                 split_percentage=config.dataset.split_percentage,
                                                 start_from_percentage=config.dataset.start_from_percentage,
-                                                shuffle=False,
+                                                shuffle=config.dataset.shuffle,
                                                 batch_size=config.dataset.batch_size,
                                                 class_balance=config.dataset.class_balance,
                                                 obs_origin=config.hyperparameters.obs_origin)
 
     loader = DataLoader(data_val,
                         batch_size=config.dataset.batch_size,
-                        shuffle=False,
+                        shuffle=config.dataset.shuffle,
                         num_workers=config.dataset.num_workers,
                         collate_fn=seq_collate)
 
-<<<<<<< HEAD
     exp_name = "test_goal_decoder" # "mm_k_6_class_balance_0_3"
-=======
-    exp_name = "mp_so_best/exp_multiloss_4/" # "mm_k_6_class_balance_0_3"
->>>>>>> feature/trainer
     model_path = BASE_DIR + "/save/argoverse/" + exp_name + "/argoverse_motion_forecasting_dataset_0_with_model.pt"
     checkpoint = torch.load(model_path)
-    generator = TrajectoryGenerator(config.sophie.generator)
+    # generator = TrajectoryGenerator(config.sophie.generator)
+    generator = TrajectoryGenerator(
+        h_dim=config.sophie.generator.hdim
+    )
 
     print("Loading model ...")
     generator.load_state_dict(checkpoint.config_cp['g_best_state'], strict=False)

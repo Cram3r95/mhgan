@@ -31,7 +31,7 @@ hyperparameters:
     g_steps: 1
     print_every: 10
     checkpoint_every: 5000
-    output_dir: "save/argoverse/dist_goal_lstm_exp1"
+    output_dir: "save/argoverse/test_cgh"
     exp_description: "multi loss + learning_rate scheduler"
     checkpoint_name: "0"
     checkpoint_start_from: #"save/argoverse/gen_exp/exp_multiloss_4/argoverse_motion_forecasting_dataset_0_with_model.pt"
