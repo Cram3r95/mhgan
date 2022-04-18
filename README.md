@@ -1,5 +1,4 @@
-# SoPhie
-SoPhie: An Attentive GAN for Predicting Paths Compliant to Social and Physical Constraints
+# Exploring Attention GAN for Vehicle Motion Prediction
 
 <img src="media/system_pipeline.svg"/>
 
