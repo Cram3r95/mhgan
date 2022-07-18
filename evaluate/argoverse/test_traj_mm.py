@@ -158,7 +158,7 @@ except:
     data_images_folder = config.dataset.path + config.dataset.split + "/data_images"
 
     MAP_GENERATION = False
-    PLOT_QUALITATIVE_RESULTS = False
+    PLOT_QUALITATIVE_RESULTS = True
 
     dist_around = 40
     dist_rasterized_map = [-dist_around, dist_around, -dist_around, dist_around]
